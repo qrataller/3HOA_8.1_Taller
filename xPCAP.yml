@@ -1,0 +1,40 @@
+---
+
+- hosts: server1
+  gather_facts: true
+  become: yes
+  become_user: root
+  pre_tasks:
+
+  - name: Install update (Ubuntu)
+    tags: always
+    apt:
+      update_cache: yes
+
+  tasks:
+    - name: Collect PCAP from Server 1
+      fetch:
+        src: "/home/roseann/PCAP/{{ item }}"
+        dest: "/home/roseann/3HOA_8.1_Taller/s1_PCAP/"
+        flat: yes
+      with_items:
+        - capture1.pcapng
+
+- hosts: localhost
+  tasks:
+
+    - name: Extract an executable from PCAP
+      shell:
+        tcpflow -r /home/roseann/3HOA_8.1_Taller/s1_PCAP/capture1.pcapng -o /home/roseann/3HOA_8.1_Taller/pcap_exe/
+      args:
+        creates: /home/roseann/3HOA_8.1_Taller/pcap_exe/executable.exe
+
+    - name: Debugging exe file
+      shell:
+        cat /home/roseann/3HOA_8.1_Taller/pcap_exe/report.xml
+      register: debug
+      changed_when: false
+
+    - debug:
+        var: debug.stdout_lines
+
